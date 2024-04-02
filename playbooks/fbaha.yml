@@ -6,463 +6,463 @@
     server: fritz.box
 
   tasks:
-  - name: login
-    tags: always
-    delegate_to: localhost
-    uri:
-      url: https://{{ server }}/login_sid.lua?version=2
-      method: GET
-      return_content: true
-      validate_certs: false
-    register: sessionInfo
-     
-  - name: get sid
-    tags: always
-    set_fact:
-      sid: "{{ sessionInfo.content | regex_search('<SID>([0-9a-f]+)</SID>', '\\1') }}"
-      
-  - name: get challenge
-    tags: always
-    when: sid[0] == "0000000000000000"
-    set_fact:
-      challenge: "{{ sessionInfo.content | regex_search('<Challenge>([0-9a-f$]+)</Challenge>', '\\1') }}"
+    - name: login
+      tags: always
+      delegate_to: localhost
+      uri:
+        url: https://{{ server }}/login_sid.lua?version=2
+        method: GET
+        return_content: true
+        validate_certs: false
+      register: sessionInfo
 
-  - name: calc response
-    tags: always
-    when: sid[0] == "0000000000000000"
-    fbcrypto:
-      password: "{{ fbpasswd }}"
-      challenge: "{{ challenge[0] }}"
-    register: response
+    - name: get sid
+      tags: always
+      set_fact:
+        sid: "{{ sessionInfo.content | regex_search('<SID>([0-9a-f]+)</SID>', '\\1') }}"
 
-  - name: login with response
-    tags: always
-    when: sid[0] == "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/login_sid.lua?version=2&username={{ fbuser }}&response={{ response.response }}"
-      method: GET
-      return_content: true
-      validate_certs: false
-    register: sessionInfo2
+    - name: get challenge
+      tags: always
+      when: sid[0] == "0000000000000000"
+      set_fact:
+        challenge: "{{ sessionInfo.content | regex_search('<Challenge>([0-9a-f$]+)</Challenge>', '\\1') }}"
 
-  - name: get sid
-    tags: always
-    set_fact:
-      sid: "{{ sessionInfo2.content | regex_search('<SID>([0-9a-f]+)</SID>', '\\1') }}"
+    - name: calc response
+      tags: always
+      when: sid[0] == "0000000000000000"
+      fbcrypto:
+        password: "{{ fbpasswd }}"
+        challenge: "{{ challenge[0] }}"
+      register: response
 
-  - name: get blocktime
-    tags: always
-    #when: sid[0] == "0000000000000000"
-    set_fact:
-      blocktime: "{{ sessionInfo2.content | regex_search('<BlockTime>([0-9]+)</BlockTime>', '\\1') }}"
+    - name: login with response
+      tags: always
+      when: sid[0] == "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/login_sid.lua?version=2&username={{ fbuser }}&response={{ response.response }}"
+        method: GET
+        return_content: true
+        validate_certs: false
+      register: sessionInfo2
 
-  - name: getswitchlist
-    tags: getswitchlist
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=getswitchlist"
-      method: GET
-      return_content: true
-      validate_certs: false
-    register: csvresult
+    - name: get sid
+      tags: always
+      set_fact:
+        sid: "{{ sessionInfo2.content | regex_search('<SID>([0-9a-f]+)</SID>', '\\1') }}"
 
-  - name: setswitchon
-    tags: setswitchon
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=setswitchon&ain={{ ain }}"
-      method: GET
-      return_content: true
-      validate_certs: false
-    register: result
+    - name: get blocktime
+      tags: always
+      # when: sid[0] == "0000000000000000"
+      set_fact:
+        blocktime: "{{ sessionInfo2.content | regex_search('<BlockTime>([0-9]+)</BlockTime>', '\\1') }}"
 
-  - name: setswitchoff
-    tags: setswitchoff
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=setswitchoff&ain={{ ain }}"
-      method: GET
-      return_content: true
-      validate_certs: false
-    register: result
+    - name: getswitchlist
+      tags: getswitchlist
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=getswitchlist"
+        method: GET
+        return_content: true
+        validate_certs: false
+      register: csvresult
 
-  - name: setswitchtoggle
-    tags: setswitchtoggle
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=setswitchtoggle&ain={{ ain }}"
-      method: GET
-      return_content: true
-      validate_certs: false
-    register: result
+    - name: setswitchon
+      tags: setswitchon
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=setswitchon&ain={{ ain }}"
+        method: GET
+        return_content: true
+        validate_certs: false
+      register: result
 
-  - name: getswitchstate
-    tags: getswitchstate
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=getswitchstate&ain={{ ain }}"
-      method: GET
-      return_content: true
-      validate_certs: false
-    register: result
+    - name: setswitchoff
+      tags: setswitchoff
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=setswitchoff&ain={{ ain }}"
+        method: GET
+        return_content: true
+        validate_certs: false
+      register: result
 
-  - name: getswitchpresent
-    tags: getswitchpresent
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=getswitchpresent&ain={{ ain }}"
-      method: GET
-      return_content: true
-      validate_certs: false
-    register: result
+    - name: setswitchtoggle
+      tags: setswitchtoggle
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=setswitchtoggle&ain={{ ain }}"
+        method: GET
+        return_content: true
+        validate_certs: false
+      register: result
 
-  - name: getswitchpower
-    tags: getswitchpower
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=getswitchpower&ain={{ ain }}"
-      method: GET
-      return_content: true
-      validate_certs: false
-    register: result
+    - name: getswitchstate
+      tags: getswitchstate
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=getswitchstate&ain={{ ain }}"
+        method: GET
+        return_content: true
+        validate_certs: false
+      register: result
 
-  - name: getswitchenergy
-    tags: getswitchenergy
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=getswitchenergy&ain={{ ain }}"
-      method: GET
-      return_content: true
-      validate_certs: false
-    register: result
+    - name: getswitchpresent
+      tags: getswitchpresent
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=getswitchpresent&ain={{ ain }}"
+        method: GET
+        return_content: true
+        validate_certs: false
+      register: result
 
-  - name: getswitchname
-    tags: getswitchname
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=getswitchname&ain={{ ain }}"
-      method: GET
-      return_content: true
-      validate_certs: false
-    register: result
+    - name: getswitchpower
+      tags: getswitchpower
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=getswitchpower&ain={{ ain }}"
+        method: GET
+        return_content: true
+        validate_certs: false
+      register: result
 
-  - name: getdevicelistinfos
-    tags: getdevicelistinfos
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=getdevicelistinfos"
-      method: GET
-      return_content: true
-      validate_certs: false
-    register: xmlresult
+    - name: getswitchenergy
+      tags: getswitchenergy
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=getswitchenergy&ain={{ ain }}"
+        method: GET
+        return_content: true
+        validate_certs: false
+      register: result
 
-  - name: gettemperature
-    tags: gettemperature
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=gettemperature&ain={{ ain }}"
-      method: GET
-      return_content: true
-      validate_certs: false
-    register: result
+    - name: getswitchname
+      tags: getswitchname
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=getswitchname&ain={{ ain }}"
+        method: GET
+        return_content: true
+        validate_certs: false
+      register: result
 
-  - name: gethkrtsoll
-    tags: gethkrtsoll
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=gethkrtsoll&ain={{ ain }}"
-      method: GET
-      return_content: true
-      validate_certs: false
-    register: result
+    - name: getdevicelistinfos
+      tags: getdevicelistinfos
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=getdevicelistinfos"
+        method: GET
+        return_content: true
+        validate_certs: false
+      register: xmlresult
 
-  - name: gethkrkomfort
-    tags: gethkrkomfort
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=gethkrkomfort&ain={{ ain }}"
-      method: GET
-      return_content: true
-      validate_certs: false
-    register: result
+    - name: gettemperature
+      tags: gettemperature
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=gettemperature&ain={{ ain }}"
+        method: GET
+        return_content: true
+        validate_certs: false
+      register: result
 
-  - name: gethkrabsenk
-    tags: gethkrabsenk
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=gethkrabsenk&ain={{ ain }}"
-      method: GET
-      return_content: true
-      validate_certs: false
-    register: result
+    - name: gethkrtsoll
+      tags: gethkrtsoll
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=gethkrtsoll&ain={{ ain }}"
+        method: GET
+        return_content: true
+        validate_certs: false
+      register: result
 
-  - name: sethkrsoll
-    tags: sethkrsoll
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=sethkrsoll&ain={{ ain }}&HKR-Solltemperatur={{ hkrsoll }}"
-      method: GET
-      return_content: true
-      validate_certs: false
+    - name: gethkrkomfort
+      tags: gethkrkomfort
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=gethkrkomfort&ain={{ ain }}"
+        method: GET
+        return_content: true
+        validate_certs: false
+      register: result
 
-  - name: getbasicdevicestats
-    tags: getbasicdevicestats
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=getbasicdevicestats&ain={{ ain }}"
-      method: GET
-      return_content: true
-      validate_certs: false
-    register: xmlresult
+    - name: gethkrabsenk
+      tags: gethkrabsenk
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=gethkrabsenk&ain={{ ain }}"
+        method: GET
+        return_content: true
+        validate_certs: false
+      register: result
 
-  - name: gettriggerlistinfos
-    tags: gettriggerlistinfos
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=gettriggerlistinfos"
-      method: GET
-      return_content: true
-      validate_certs: false
-    register: xmlresult
+    - name: sethkrsoll
+      tags: sethkrsoll
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=sethkrsoll&ain={{ ain }}&HKR-Solltemperatur={{ hkrsoll }}"
+        method: GET
+        return_content: true
+        validate_certs: false
 
-  - name: settriggeractive
-    tags: settriggeractive
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=settriggeractive&active={{ active }}"
-      method: GET
-      return_content: true
-      validate_certs: false
+    - name: getbasicdevicestats
+      tags: getbasicdevicestats
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=getbasicdevicestats&ain={{ ain }}"
+        method: GET
+        return_content: true
+        validate_certs: false
+      register: xmlresult
 
-  - name: gettemplatelistinfos
-    tags: gettemplatelistinfos
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=gettemplatelistinfos"
-      method: GET
-      return_content: true
-      validate_certs: false
-    register: xmlresult
+    - name: gettriggerlistinfos
+      tags: gettriggerlistinfos
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=gettriggerlistinfos"
+        method: GET
+        return_content: true
+        validate_certs: false
+      register: xmlresult
 
-  - name: applytemplate
-    tags: applytemplate
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=applytemplate&ain={{ ain }}"
-      method: GET
-      return_content: true
-      validate_certs: false
+    - name: settriggeractive
+      tags: settriggeractive
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=settriggeractive&active={{ active }}"
+        method: GET
+        return_content: true
+        validate_certs: false
 
-  - name: setsimpleonoff
-    tags: setsimpleonoff
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=setsimpleonoff&ain={{ ain }}&onoff={{ onoff }}"
-      method: GET
-      return_content: true
-      validate_certs: false
+    - name: gettemplatelistinfos
+      tags: gettemplatelistinfos
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=gettemplatelistinfos"
+        method: GET
+        return_content: true
+        validate_certs: false
+      register: xmlresult
 
-  - name: setlevel
-    tags: setlevel
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=setlevel&ain={{ ain }}&level={{ level }}"
-      method: GET
-      return_content: true
-      validate_certs: false
+    - name: applytemplate
+      tags: applytemplate
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=applytemplate&ain={{ ain }}"
+        method: GET
+        return_content: true
+        validate_certs: false
 
-  - name: setlevelpercentage
-    tags: setlevelpercentage
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=setlevelpercentage&ain={{ ain }}&level={{ level }}"
-      method: GET
-      return_content: true
-      validate_certs: false
+    - name: setsimpleonoff
+      tags: setsimpleonoff
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=setsimpleonoff&ain={{ ain }}&onoff={{ onoff }}"
+        method: GET
+        return_content: true
+        validate_certs: false
 
-  - name: setcolor
-    tags: setcolor
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=setcolor&ain={{ ain }}&hue={{ hue }}&saturation={{ saturation }}&duration={{ duration }}"
-      method: GET
-      return_content: true
-      validate_certs: false
+    - name: setlevel
+      tags: setlevel
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=setlevel&ain={{ ain }}&level={{ level }}"
+        method: GET
+        return_content: true
+        validate_certs: false
 
-  - name: setunmappedcolor
-    tags: setunmappedcolor
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=setunmappedcolor&ain={{ ain }}&hue={{ hue }}&saturation={{ saturation }}&duration={{ duration }}"
-      method: GET
-      return_content: true
-      validate_certs: false
+    - name: setlevelpercentage
+      tags: setlevelpercentage
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=setlevelpercentage&ain={{ ain }}&level={{ level }}"
+        method: GET
+        return_content: true
+        validate_certs: false
 
-  - name: setcolortemperature
-    tags: setcolortemperature
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=setcolortemperature&ain={{ ain }}&temperature:={{ temperature }}&duration={{ duration }}"
-      method: GET
-      return_content: true
-      validate_certs: false
+    - name: setcolor
+      tags: setcolor
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=setcolor&ain={{ ain }}&hue={{ hue }}&saturation={{ saturation }}&duration={{ duration }}"
+        method: GET
+        return_content: true
+        validate_certs: false
 
-  - name: addcolorleveltemplate
-    tags: addcolorleveltemplate
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=addcolorleveltemplate&name={{ name }}&levelPercentage={{ levelPercentage }}&hue={{ hue }}&saturation={{ saturation }}&temperature:={{ temperature }}&colorpreset={{ colorpreset }}"
-      method: GET
-      return_content: true
-      validate_certs: false
+    - name: setunmappedcolor
+      tags: setunmappedcolor
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=setunmappedcolor&ain={{ ain }}&hue={{ hue }}&saturation={{ saturation }}&duration={{ duration }}"
+        method: GET
+        return_content: true
+        validate_certs: false
 
-  - name: getcolordefaults
-    tags: getcolordefaults
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=getcolordefaults"
-      method: GET
-      return_content: true
-      validate_certs: false
-    register: xmlresult
+    - name: setcolortemperature
+      tags: setcolortemperature
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=setcolortemperature&ain={{ ain }}&temperature:={{ temperature }}&duration={{ duration }}"
+        method: GET
+        return_content: true
+        validate_certs: false
 
-  - name: sethkrboost
-    tags: sethkrboost
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=sethkrboost&ain={{ ain }}&endtimestamp={{ endtimestamp }}"
-      method: GET
-      return_content: true
-      validate_certs: false
-    register: result
+    - name: addcolorleveltemplate
+      tags: addcolorleveltemplate
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=addcolorleveltemplate&name={{ name }}&levelPercentage={{ levelPercentage }}&hue={{ hue }}&saturation={{ saturation }}&temperature:={{ temperature }}&colorpreset={{ colorpreset }}"
+        method: GET
+        return_content: true
+        validate_certs: false
 
-  - name: sethkrwindowopen
-    tags: sethkrwindowopen
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=sethkrwindowopen&ain={{ ain }}&endtimestamp={{ endtimestamp }}"
-      method: GET
-      return_content: true
-      validate_certs: false
-    register: result
+    - name: getcolordefaults
+      tags: getcolordefaults
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=getcolordefaults"
+        method: GET
+        return_content: true
+        validate_certs: false
+      register: xmlresult
 
-  - name: setblind
-    tags: setblind
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=setblind&ain={{ ain }}&target={{ target }}"
-      method: GET
-      return_content: true
-      validate_certs: false
+    - name: sethkrboost
+      tags: sethkrboost
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=sethkrboost&ain={{ ain }}&endtimestamp={{ endtimestamp }}"
+        method: GET
+        return_content: true
+        validate_certs: false
+      register: result
 
-  - name: setname
-    tags: setname
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=setname&ain={{ ain }}&name={{ name }}"
-      method: GET
-      return_content: true
-      validate_certs: false
+    - name: sethkrwindowopen
+      tags: sethkrwindowopen
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=sethkrwindowopen&ain={{ ain }}&endtimestamp={{ endtimestamp }}"
+        method: GET
+        return_content: true
+        validate_certs: false
+      register: result
 
-  - name: setmetadata
-    tags: setmetadata
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=setmetadata&ain={{ ain }}&metadata={{ metadata }}"
-      method: GET
-      return_content: true
-      validate_certs: false
+    - name: setblind
+      tags: setblind
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=setblind&ain={{ ain }}&target={{ target }}"
+        method: GET
+        return_content: true
+        validate_certs: false
 
-  - name: startulesubscription
-    tags: startulesubscription
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=startulesubscription"
-      method: GET
-      return_content: true
-      validate_certs: false
+    - name: setname
+      tags: setname
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=setname&ain={{ ain }}&name={{ name }}"
+        method: GET
+        return_content: true
+        validate_certs: false
 
-  - name: getsubscriptionstate
-    tags: getsubscriptionstate
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=getsubscriptionstate"
-      method: GET
-      return_content: true
-      validate_certs: false
-    register: xmlresult
+    - name: setmetadata
+      tags: setmetadata
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=setmetadata&ain={{ ain }}&metadata={{ metadata }}"
+        method: GET
+        return_content: true
+        validate_certs: false
 
-  - name: getdeviceinfos
-    tags: getdeviceinfos
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=getdeviceinfos&ain={{ ain }}"
-      method: GET
-      return_content: true
-      validate_certs: false
-    register: xmlresult
-    
-  - name: debug
-    tags: getswitchlist
-    when: csvresult
-    debug:
-      var: csvresult.content
+    - name: startulesubscription
+      tags: startulesubscription
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=startulesubscription"
+        method: GET
+        return_content: true
+        validate_certs: false
 
-  - name: debug
-    tags: setswitchon, setswitchoff, setswitchtoggle, getswitchstate, getswitchpresent, getswitchpower, getswitchenergy, getswitchname, gettemperature, gethkrtsoll, gethkrkomfort, gethkrabsenk, sethkrboost, sethkrwindowopen
-    when: result
-    debug:
-      var: result.content
+    - name: getsubscriptionstate
+      tags: getsubscriptionstate
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=getsubscriptionstate"
+        method: GET
+        return_content: true
+        validate_certs: false
+      register: xmlresult
 
-  - name: debug
-    tags: getdevicelistinfos, getbasicdevicestats, gettriggerlistinfos, gettemplatelistinfos, getcolordefaults, getsubscriptionstate, getdeviceinfos
-    when: xmlresult
-    debug:
-      var: xmlresult.content
+    - name: getdeviceinfos
+      tags: getdeviceinfos
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/webservices/homeautoswitch.lua?sid={{ sid[0] }}&switchcmd=getdeviceinfos&ain={{ ain }}"
+        method: GET
+        return_content: true
+        validate_certs: false
+      register: xmlresult
 
-  - name: logout
-    tags: always
-    when: sid[0] != "0000000000000000"
-    delegate_to: localhost
-    uri:
-      url: "https://{{ server }}/login_sid.lua?version=2&sid={{ sid[0] }}&logout"
-      method: GET
-      return_content: true
-      validate_certs: false
+    - name: debug
+      tags: getswitchlist
+      when: csvresult
+      debug:
+        var: csvresult.content
+
+    - name: debug
+      tags: setswitchon, setswitchoff, setswitchtoggle, getswitchstate, getswitchpresent, getswitchpower, getswitchenergy, getswitchname, gettemperature, gethkrtsoll, gethkrkomfort, gethkrabsenk, sethkrboost, sethkrwindowopen
+      when: result
+      debug:
+        var: result.content
+
+    - name: debug
+      tags: getdevicelistinfos, getbasicdevicestats, gettriggerlistinfos, gettemplatelistinfos, getcolordefaults, getsubscriptionstate, getdeviceinfos
+      when: xmlresult
+      debug:
+        var: xmlresult.content
+
+    - name: logout
+      tags: always
+      when: sid[0] != "0000000000000000"
+      delegate_to: localhost
+      uri:
+        url: "https://{{ server }}/login_sid.lua?version=2&sid={{ sid[0] }}&logout"
+        method: GET
+        return_content: true
+        validate_certs: false
