@@ -1,11 +1,15 @@
 ---
 - hosts: localhost
+  strategy: linear
+  serial: 1
   gather_facts: false
 
   vars:
     server: fritz.box
+    # fbuser
+    # fbpasswd
 
-  tasks:
+  pre_tasks:
     - name: login
       tags: always
       delegate_to: localhost
@@ -57,6 +61,7 @@
       set_fact:
         blocktime: "{{ sessionInfo2.content | regex_search('<BlockTime>([0-9]+)</BlockTime>', '\\1') }}"
 
+  tasks:
     - name: getswitchlist
       tags: getswitchlist
       when: sid[0] != "0000000000000000"
@@ -457,12 +462,13 @@
       debug:
         var: xmlresult.content
 
+  post_tasks:
     - name: logout
       tags: always
       when: sid[0] != "0000000000000000"
       delegate_to: localhost
       uri:
-        url: "https://{{ server }}/login_sid.lua?version=2&sid={{ sid[0] }}&logout"
+        url: "https://{{ server }}/login_sid.lua?version=2&sid={{ sid[0] }}&logout=1"
         method: GET
         return_content: true
         validate_certs: false
